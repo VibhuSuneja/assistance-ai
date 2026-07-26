@@ -1,0 +1,85 @@
+services:
+  # 1. Redis Database (Internal cache/session storage)
+  - type: redis
+    name: cortex-redis
+    ipAllowList: [] # Only allow internal services to connect
+
+  # 2. Auth Service
+  - type: web
+    name: cortex-auth-service
+    env: node
+    rootDir: cortex-ai/backend/services/auth
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: REDIS_URL
+        fromService:
+          name: cortex-redis
+          type: redis
+          property: connectionString
+
+  # 3. Chat Service
+  - type: web
+    name: cortex-chat-service
+    env: node
+    rootDir: cortex-ai/backend/services/chat
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 5002
+
+  # 4. Agent Service
+  - type: web
+    name: cortex-agent-service
+    env: node
+    rootDir: cortex-ai/backend/services/agent
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 5003
+
+  # 5. Billing Service
+  - type: web
+    name: cortex-billing-service
+    env: node
+    rootDir: cortex-ai/backend/services/billing
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 5004
+
+  # 6. API Gateway (Entry point proxying request to microservices)
+  - type: web
+    name: cortex-gateway
+    env: node
+    rootDir: cortex-ai/backend/gateway
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: AUTH_SERVICE
+        fromService:
+          name: cortex-auth-service
+          type: web
+          property: host
+      - key: CHAT_SERVICE
+        fromService:
+          name: cortex-chat-service
+          type: web
+          property: host
+      - key: AGENT_SERVICE
+        fromService:
+          name: cortex-agent-service
+          type: web
+          property: host
+      - key: BILLING_SERVICE
+        fromService:
+          name: cortex-billing-service
+          type: web
+          property: host
