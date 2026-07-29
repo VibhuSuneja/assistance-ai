@@ -19,6 +19,8 @@ services:
           name: cortex-redis
           type: redis
           property: connectionString
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
 
   # 3. Chat Service
   - type: web
