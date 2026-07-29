@@ -21,6 +21,11 @@ services:
           property: connectionString
       - key: FIREBASE_SERVICE_ACCOUNT
         sync: false
+      - key: FRONTEND_URL
+        fromService:
+          name: cortex-frontend
+          type: static
+          property: url
 
   # 3. Chat Service
   - type: web
@@ -65,6 +70,11 @@ services:
     envVars:
       - key: PORT
         value: 5000
+      - key: FRONTEND_URL
+        fromService:
+          name: cortex-frontend
+          type: static
+          property: url
       - key: AUTH_SERVICE
         fromService:
           name: cortex-auth-service
@@ -85,3 +95,24 @@ services:
           name: cortex-billing-service
           type: web
           property: host
+
+  # 7. Frontend Static Site
+  - type: static
+    name: cortex-frontend
+    rootDir: cortex-ai/frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_SERVER_URL
+        fromService:
+          name: cortex-gateway
+          type: web
+          property: host
+      - key: VITE_FIREBASE_API_KEY
+        value: AIzaSyDrUwx3fB_smQWCuJY6W551DX0fHef0GV4
+      - key: VITE_RAZORPAY_KEY
+        value: rzp_test_RP6CZy2WPSESRO
