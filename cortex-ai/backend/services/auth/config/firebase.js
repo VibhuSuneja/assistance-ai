@@ -13,7 +13,11 @@ function getServiceAccountCredential() {
       const jsonStr = rawEnv.startsWith("{")
         ? rawEnv
         : Buffer.from(rawEnv, "base64").toString("utf-8");
-      return JSON.parse(jsonStr);
+      const parsed = JSON.parse(jsonStr);
+      if (parsed && typeof parsed.private_key === "string") {
+        parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+      }
+      return parsed;
     } catch (err) {
       console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT environment variable:", err.message);
     }
