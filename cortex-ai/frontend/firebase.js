@@ -6,8 +6,8 @@ import { getAuth, GithubAuthProvider, GoogleAuthProvider } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey:import.meta.env.VITE_FIREBASE_API_KEY ,
-authDomain: "multiagent-38e71.firebaseapp.com",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "multiagent-38e71.firebaseapp.com",
   projectId: "multiagent-38e71",
   storageBucket: "multiagent-38e71.firebasestorage.app",
   messagingSenderId: "1008274395186",

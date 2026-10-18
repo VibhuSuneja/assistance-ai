@@ -5,26 +5,39 @@ import ChatArea from "../components/ChatArea";
 import Sidebar from "../components/Sidebar";
 import api from "../utils/axios";
 import { setUserData } from "../redux/user.slice";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase";
+import { useEffect } from "react";
 
 function Home() {
   const { userData } = useSelector(state => state.user);
-  const dispatch=useDispatch()
-const login=async (token)=>{
-  try {
-    const {data}=await api.post(`/api/auth/login`,{token})
-    dispatch(setUserData(data.user))
-  } catch (error) {
-    console.log(error)
-  }
-}
-  const handleGoogleLogin =async () => {
-     const result =
-     await signInWithPopup(auth,googleProvider);
-    
-     const token =await result.user.getIdToken();
-     await login(token)
+  const dispatch = useDispatch();
+
+  const login = async (token) => {
+    try {
+      const { data } = await api.post(`/api/auth/login`, { token });
+      dispatch(setUserData(data.user));
+    } catch (error) {
+      console.log("Login API error:", error?.response?.data?.message || error.message);
+    }
+  };
+
+  // Handle redirect result when user returns from Google OAuth
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const token = await result.user.getIdToken();
+          await login(token);
+        }
+      })
+      .catch((err) => {
+        console.error("Redirect result error:", err.message);
+      });
+  }, []);
+
+  const handleGoogleLogin = () => {
+    signInWithRedirect(auth, googleProvider);
   };
 
   return (

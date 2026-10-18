@@ -14,15 +14,31 @@ export const login = async (
 
   try {
 
-
     const { token } = req.body;
 
-    const decoded =
-      await getAuth(app)
-        .verifyIdToken(token);
+    if (!token) {
+      return res.status(400).json({ message: "ID token is required" });
+    }
 
-    console.log(decoded);
+    let decoded;
+    try {
+      decoded = await getAuth(app).verifyIdToken(token);
+    } catch (firebaseError) {
+      console.error("[Auth] Firebase token verification failed:", firebaseError.code, firebaseError.message);
+      // Firebase-specific auth errors → 401
+      // Missing credentials / server misconfiguration → 500
+      const isAuthError = [
+        "auth/argument-error",
+        "auth/id-token-expired",
+        "auth/id-token-revoked",
+        "auth/invalid-id-token",
+      ].includes(firebaseError.code);
+      return res
+        .status(isAuthError ? 401 : 500)
+        .json({ message: isAuthError ? "Invalid or expired token" : `Server auth config error: ${firebaseError.message}` });
+    }
 
+    console.log("[Auth] Decoded token uid:", decoded.uid);
 
     let user =
       await User.findOne({
@@ -120,11 +136,11 @@ export const login = async (
 
   } catch (error) {
 
+    console.error("[Auth] Login error:", error.message);
     return res
-      .status(401)
+      .status(500)
       .json({
-        message:
-          error.message,
+        message: error.message,
       });
 
   }
